@@ -65,7 +65,7 @@ jobs:
         run: |
           $source = "$(Get-Location)\node-app"
           #$target = "\\${{ secrets.WINDOWS_SERVER_HOST }}\c$\inetpub\wwwroot\internal-app"
-          $target = "\\$server\internal-app"
+          $target = "C:\inetpub\wwwroot\internal-app"
           Write-Host "Copying from $source to $target"
           Copy-Item -Path "$source\*" -Destination $target -Recurse -Force
 
