@@ -49,11 +49,12 @@ jobs:
     needs: build
 
     steps:
-      # 1. Download artifact
+      # 1. Download artifact into a fixed folder
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: node-app
+          path: node-app   # 👈 ensures folder exists here
 
       # 2. Debug: list downloaded files
       - name: List downloaded files
@@ -62,8 +63,10 @@ jobs:
       # 3. Copy files to Windows Server (via PowerShell)
       - name: Copy files to Windows Server
         run: |
+          $source = "$(Get-Location)\node-app"
           $target = "\\${{ secrets.WINDOWS_SERVER_HOST }}\c$\inetpub\wwwroot\internal-app"
-          Copy-Item -Path node-app\* -Destination $target -Recurse -Force
+          Write-Host "Copying from $source to $target"
+          Copy-Item -Path "$source\*" -Destination $target -Recurse -Force
 
       # 4. Restart IIS (or replace with your service)
       - name: Restart IIS
