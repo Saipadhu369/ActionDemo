@@ -1,9 +1,9 @@
-name: Build and Deploy Internally
+ name: Build and Deploy to Windows Server
 
 on:
   push:
     branches:
-      - main   # Trigger on push to main branch
+      - main   # Trigger workflow on push to main branch
 
 jobs:
   build:
@@ -40,7 +40,7 @@ jobs:
           path: build/
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs: build
 
     steps:
@@ -50,22 +50,12 @@ jobs:
         with:
           name: node-app
 
-      # 2. Copy files to internal server via SSH
-      - name: Deploy to internal server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.INTERNAL_SERVER_HOST }}
-          username: ${{ secrets.INTERNAL_SERVER_USER }}
-          key: ${{ secrets.INTERNAL_SERVER_SSH_KEY }}
-          source: "./build/*"
-          target: "/var/www/internal-app"
+      # 2. Copy files to Windows Server (via PowerShell)
+      - name: Copy files to Windows Server
+        run: |
+          $target = "\\${{ secrets.WINDOWS_SERVER_HOST }}\c$\inetpub\wwwroot\internal-app"
+          Copy-Item -Path build\* -Destination $target -Recurse -Force
 
-      # 3. Restart service on server
-      - name: Restart service
-        uses: appleboy/ssh-action@v0.1.7 
-        with:
-          host: ${{ secrets.INTERNAL_SERVER_HOST }}
-          username: ${{ secrets.INTERNAL_SERVER_USER }}
-          key: ${{ secrets.INTERNAL_SERVER_SSH_KEY }}
-          script: |
-            sudo systemctl restart internal-app.service
+      # 3. Restart IIS (or replace with your service)
+      - name: Restart IIS
+        run: iisreset /restart
