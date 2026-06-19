@@ -1,4 +1,4 @@
- name: Build and Deploy to Windows Server
+name: Build and Deploy to Windows Server
 
 on:
   push:
