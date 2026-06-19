@@ -3,8 +3,8 @@ name: Build and Deploy to Windows Server
 on:
   push:
     branches:
-      - main   # Trigger workflow on push to main branch
-  workflow_dispatch:   # adds manual run option
+      - main
+  workflow_dispatch:   # allows manual run from GitHub UI
 
 jobs:
   build:
@@ -13,11 +13,11 @@ jobs:
     steps:
       # 1. Checkout code
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 2. Setup Node.js (example app)
+      # 2. Setup Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -33,7 +33,11 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # 6. Upload build artifact
+      # 6. Debug: list build files
+      - name: List build files
+        run: ls -R build
+
+      # 7. Upload build artifact
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -45,18 +49,22 @@ jobs:
     needs: build
 
     steps:
-      # 1. Download build artifact
+      # 1. Download artifact
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: node-app
 
-      # 2. Copy files to Windows Server (via PowerShell)
+      # 2. Debug: list downloaded files
+      - name: List downloaded files
+        run: dir node-app
+
+      # 3. Copy files to Windows Server (via PowerShell)
       - name: Copy files to Windows Server
         run: |
           $target = "\\${{ secrets.WINDOWS_SERVER_HOST }}\c$\inetpub\wwwroot\internal-app"
-          Copy-Item -Path build\* -Destination $target -Recurse -Force
+          Copy-Item -Path node-app\* -Destination $target -Recurse -Force
 
-      # 3. Restart IIS (or replace with your service)
+      # 4. Restart IIS (or replace with your service)
       - name: Restart IIS
         run: iisreset /restart
